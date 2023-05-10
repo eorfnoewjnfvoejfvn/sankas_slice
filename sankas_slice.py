@@ -103,6 +103,21 @@ class FormGUI:
         messagebox.showinfo("Success", " Detail's Colletected successfully.")
         self.window.destroy()
 
+
+class Category:
+    def __init__(self, name):
+        self.name = name
+        self.items = []
+
+    def add_item(self, item):
+        self.items.append(item)
+
+
+class Item:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+
 # Create an instance of the FormGUI class
 form = FormGUI()
 

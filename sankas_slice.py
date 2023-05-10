@@ -4,6 +4,9 @@ from tkinter import ttk
 import re
 
 
+import tkinter as tk
+from tkinter import ttk
+
 class FormGUI:
     def __init__(self):
         self.window = tk.Tk()
@@ -32,4 +35,14 @@ class FormGUI:
 
         self.entry_phone_number = ttk.Entry(self.window, textvariable=self.phone_number_var)
         self.entry_phone_number.grid(row=2, column=1, padx=10, pady=10)
+
+        # Add a submit button
+        self.submit_button = ttk.Button(self.window, text="Submit", command=self.submit_form)
+        self.submit_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+# Create an instance of the FormGUI class
+form = FormGUI()
+
+# Start the main event loop
+form.window.mainloop()
 

@@ -118,6 +118,35 @@ class Item:
         self.name = name
         self.price = price
 
+class MenuSelectionGUI:
+    def __init__(self, parent, form_gui):
+        self.form_gui = form_gui
+        self.categories = [
+            Category("Pizza"),
+            Category("Sides"),
+            Category("Drinks")
+        ]
+
+        # Adding items to categories
+        self.categories[0].add_item(Item("Margherita", 9.99))
+        self.categories[0].add_item(Item("Pepperoni", 11.99))
+        self.categories[0].add_item(Item("Vegetarian", 10.99))
+        self.categories[0].add_item(Item("Meat Lovers", 10.99))
+        self.categories[0].add_item(Item("Cheese", 10.99))
+        self.categories[0].add_item(Item("Vegan", 10.99))
+        self.categories[1].add_item(Item("French Fries", 3.99))
+        self.categories[1].add_item(Item("Garlic Bread", 4.99))
+        self.categories[1].add_item(Item("Onion Rings", 4.99))
+        self.categories[1].add_item(Item("Hash Bites", 4.99))
+        self.categories[1].add_item(Item("Chicken Wings", 8.99))
+        self.categories[1].add_item(Item("jalapeno Poppers", 8.99))
+        self.categories[2].add_item(Item("Cola", 1.99))
+        self.categories[2].add_item(Item("Lemonade", 2.99))
+        self.categories[2].add_item(Item("Iced Tea", 2.49))
+        self.categories[2].add_item(Item("Pepsi", 2.49))
+        self.categories[2].add_item(Item("Fanta", 2.49))
+        self.categories[2].add_item(Item("Sprite", 2.49))
+
 # Create an instance of the FormGUI class
 form = FormGUI()
 

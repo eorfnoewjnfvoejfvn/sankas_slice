@@ -190,3 +190,189 @@ class MenuSelectionGUI:
         self.parent = parent
         self.parent.title("Menu Selection")
         self.parent.geometry("500x500")
+
+        self.frame = ttk.Frame(self.parent)
+        self.frame.pack(pady=10)
+
+        self.category_label = ttk.Label(self.frame, text="Select a Category:")
+        self.category_label.pack()
+
+        self.selected_category = tk.StringVar(value=self.categories[0].name)
+        self.category_dropdown = ttk.Combobox(
+            self.frame,
+            textvariable=self.selected_category,
+            values=[category.name for category in self.categories],
+            state="readonly",
+        )
+        self.category_dropdown.pack()
+        self.category_dropdown.bind("<<ComboboxSelected>>", self.update_items)
+
+        self.category_dropdown.config(justify='center')  # Center align the text
+
+        self.items_frame = ttk.Frame(self.parent, style="Items.TFrame")
+        self.items_frame.pack(pady=10)
+
+        self.cart_treeview = ttk.Treeview(
+            self.parent,
+            columns=("item", "quantity", "price"),
+            show="headings",
+        )
+        self.cart_treeview.heading("item", text="Item", anchor="center")
+        self.cart_treeview.heading("quantity", text="Quantity", anchor="center")
+        self.cart_treeview.heading("price", text="Price", anchor="center")
+        self.cart_treeview.column("item", width=150, anchor="center")
+        self.cart_treeview.column("quantity", width=100, anchor="center")
+        self.cart_treeview.column("price", width=100, anchor="center")
+        self.cart_treeview.bind('<<TreeviewSelect>>', self.click_event)
+
+        self.cart_scrollbar = ttk.Scrollbar(
+            self.parent,
+            orient="vertical",
+            command=self.cart_treeview.yview,
+        )
+        self.cart_scrollbar.pack(side="right", fill="y")
+
+        self.cart_treeview.configure(yscrollcommand=self.cart_scrollbar.set)
+        self.cart_treeview.pack(pady=10, padx=10)
+
+        button_frame = ttk.Frame(self.parent)
+        button_frame.pack(pady=10)
+        self.delete_all_button = ttk.Button(
+            button_frame,
+            text="Delete All",
+            command=self.delete_all_items,
+            style="GridButton.TButton",
+            state="disabled",  # Disable the button initially
+        )
+        self.delete_all_button.pack(side="left", padx=5)
+        self.complete_order_button = ttk.Button(
+            button_frame,
+            text="Complete Order",
+            command=self.show_order_summary,
+            style="GridButton.TButton",
+            state="disabled",  # Disable the button initially
+        )
+        self.complete_order_button.pack(side="left", padx=5)
+
+        self.delete_button = ttk.Button(
+            button_frame,
+            text="Delete Item",
+            command=self.delete_selected_item,
+            style="GridButton.TButton",
+            state="disabled",
+        )
+        self.delete_button.pack(side="left", padx=5)
+
+        self.update_items(None)
+
+    def click_event(self, event):     #Handle the click event on the cart items.
+        selected_item = self.cart_treeview.selection()
+        if selected_item:
+            self.delete_button.config(state="normal")
+        else:
+            self.delete_button.config(state="disabled")
+
+    def update_items(self, event): #Update the items displayed based on the selected category.
+        category_name = self.selected_category.get()
+        items = next(category for category in self.categories if category.name == category_name).items
+
+        for widget in self.items_frame.winfo_children():
+            widget.destroy()
+
+        for i, item in enumerate(items):
+            button_frame = ttk.Frame(self.items_frame)
+            button_frame.grid(row=i // 3, column=i % 3, padx=5, pady=5)
+
+            button = ttk.Button(
+                button_frame,
+                text=f"{item.name} (${item.price:.2f})",
+                command=lambda i=item: self.add_to_cart(i),
+                style="GridButton.TButton",
+            )
+            button.pack(fill="both", expand=True)
+
+    def add_to_cart(self, item): #Add the selected item to the cart.
+        item_already_in_cart = False
+        total_quantity = sum(cart_item["quantity"] for cart_item in self.cart)
+
+        if total_quantity >= 12:
+            messagebox.showerror("Error", "Maximum quantity of items in the cart reached.")
+            return
+
+        item_already_in_cart = False
+
+        for cart_item in self.cart:
+            if cart_item["item"].name == item.name:
+                cart_item["quantity"] += 1
+                item_already_in_cart = True
+                break
+
+        if not item_already_in_cart:
+            self.cart.append({"item": item, "quantity": 1})
+
+        self.update_cart()
+
+    def delete_selected_item(self): #Delete the selected item from the cart.
+        selected_item = self.cart_treeview.selection()
+        if selected_item:
+            item_values = self.cart_treeview.item(selected_item)["values"]
+            for item in self.cart:
+                if item["item"].name == item_values[0]:
+                    self.cart.remove(item)
+                    self.update_cart()
+                    break
+
+        if not self.cart:
+            self.delete_button.config(state="disabled")
+            self.complete_order_button.config(state="disabled")
+
+    def delete_all_items(self): #Delete all items from the cart.
+        self.cart.clear()
+        self.update_cart()
+        self.delete_button.config(state="disabled")  # Disable the "Delete Item" button
+        self.complete_order_button.config(state="disabled")  # Disable the "Complete Order" button
+
+    def update_cart(self): #Update the cart display.
+        self.cart_treeview.delete(*self.cart_treeview.get_children())
+
+        total_cost = 0
+        total_quantity = 0
+
+        for item in self.cart:
+            item_name = item["item"].name
+            quantity = item["quantity"]
+            price = item["item"].price
+            self.cart_treeview.insert(
+                "",
+                "end",
+                values=(item_name, quantity, f"${price * quantity:.2f}"),
+            )
+            total_cost += price * quantity
+            total_quantity += quantity
+
+        self.cart_treeview.insert(
+            "",
+            "end",
+            values=("Total", total_quantity, f"${total_cost:.2f}"),
+            tags=("total",)
+        )
+
+        self.cart_treeview.tag_configure("total", font=("Arial", 12, "bold"))
+        self.cart_treeview.tag_bind("total", "<Button-1>", self.on_total_click)
+
+        if self.cart:
+            self.complete_order_button.config(state="normal")
+            self.delete_all_button.config(state="normal")  # Enable the "Delete All" button
+        else:
+            self.complete_order_button.config(state="disabled")
+            self.delete_all_button.config(state="disabled")  # Disable the "Delete All" button
+
+    def on_total_click(self, event):
+        selected_item = self.cart_treeview.selection()
+        if selected_item and "total" in self.cart_treeview.item(selected_item)["tags"]:
+            self.show_order_summary()
+
+    def show_order_summary(self):
+        self.parent.withdraw()  # Hide the menu window
+        summary_gui = OrderSummary(self.parent, self.form_gui, self.cart)
+        #root.mainloop()

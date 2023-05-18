@@ -376,3 +376,103 @@ class MenuSelectionGUI:
         self.parent.withdraw()  # Hide the menu window
         summary_gui = OrderSummary(self.parent, self.form_gui, self.cart)
         #root.mainloop()
+
+        class OrderSummary:
+    def __init__(self, parent, form_gui, cart):
+        self.parent = parent
+        self.form_gui = form_gui
+        self.cart = cart
+        self.summary_window = tk.Toplevel(self.parent)
+        self.summary_window.title("Order Summary")
+
+        # Calculate the desired height based on the number of items in the cart
+        num_items = len(self.cart)
+        height = 300 + (num_items * 15)
+        self.summary_window.geometry(f"400x{height}")
+
+        # Create the order summary label
+        summary_label = ttk.Label(self.summary_window, text="Order Summary", font=("Arial", 16, "bold"))
+        summary_label.pack(pady=10)
+
+        # Create the customer information section
+        customer_frame = ttk.LabelFrame(self.summary_window, text="Customer Information")
+        customer_frame.pack(pady=10)
+
+        # Retrieve customer information from FormGUI
+        first_name = self.form_gui.first_name_var.get()
+        last_name = self.form_gui.last_name_var.get()
+        phone_number = self.form_gui.phone_number_var.get()
+
+        # Display customer information using labels
+        first_name_label = ttk.Label(customer_frame, text="First Name:", font=("Arial", 8))
+        first_name_label.grid(row=0, column=0, sticky=tk.W)
+        first_name_value = ttk.Label(customer_frame, text=first_name, font=("Arial", 8))
+        first_name_value.grid(row=0, column=1, padx=5)
+
+        last_name_label = ttk.Label(customer_frame, text="Last Name:")
+        last_name_label.grid(row=1, column=0, sticky=tk.W)
+        last_name_value = ttk.Label(customer_frame, text=last_name)
+        last_name_value.grid(row=1, column=1, padx=5)
+
+        phone_number_label = ttk.Label(customer_frame, text="Phone Number:")
+        phone_number_label.grid(row=2, column=0, sticky=tk.W)
+        phone_number_value = ttk.Label(customer_frame, text=phone_number)
+        phone_number_value.grid(row=2, column=1, padx=5)
+
+        # Create the order details section
+        order_frame = ttk.LabelFrame(self.summary_window, text="Order Details")
+        order_frame.pack(pady=10)
+
+        # Retrieve items from the cart
+        cart_items = self.cart
+
+        # Format the order details as a string
+        order_details = ""
+        for item in cart_items:
+            name = item['item'].name
+            quantity = item['quantity']
+            price = item['item'].price
+            total_price = quantity * price
+            order_details += f"{name}: {quantity} x {price}$ = {total_price}$\n"
+
+        # Display order details using a label
+        order_details_label = ttk.Label(order_frame, text=order_details)
+        order_details_label.pack()
+
+        # Create the "Edit Order" button
+        edit_order_button = ttk.Button(
+            self.summary_window,
+            text="Edit Order",
+            command=self.edit_order,
+            style="GridButton.TButton"
+        )
+        edit_order_button.pack(pady=5)
+
+        # Create a frame to hold the buttons
+        button_frame = ttk.Frame(self.summary_window)
+        button_frame.pack(pady=5)
+
+        # Create button for Pickup
+        pickup_button = ttk.Button(
+            button_frame,
+            text="Pickup",
+            command=lambda: self.place_pickup_order(first_name, last_name, phone_number, cart_items),
+            style="GridButton.TButton",
+        )
+        pickup_button.pack(side="left", padx=5)
+
+        # Create button for Delivery
+        delivery_button = ttk.Button(
+            button_frame,
+            text="Delivery",
+            command=lambda: self.get_delivery_address(first_name, last_name, phone_number, cart_items),
+            style="GridButton.TButton",
+        )
+        delivery_button.pack(side="left", padx=5)
+
+        # Center the buttons using pack()
+        button_frame.pack_configure(anchor="center")
+
+    def edit_order(self):
+        self.parent.deiconify()
+        self.summary_window.withdraw()

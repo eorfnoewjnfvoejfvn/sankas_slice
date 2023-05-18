@@ -598,3 +598,10 @@ class OrderSummary:
         self.summary_window.withdraw()  # Hide the order summary window
         self.address_window.withdraw()  # Hide the address window
         self.form_gui.window.withdraw()  # Hide the form window
+
+
+
+
+form_gui = FormGUI()
+
+form_gui.window.mainloop()

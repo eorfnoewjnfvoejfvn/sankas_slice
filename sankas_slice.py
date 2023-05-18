@@ -377,7 +377,7 @@ class MenuSelectionGUI:
         summary_gui = OrderSummary(self.parent, self.form_gui, self.cart)
         #root.mainloop()
 
-        class OrderSummary:
+class OrderSummary:
     def __init__(self, parent, form_gui, cart):
         self.parent = parent
         self.form_gui = form_gui
@@ -476,3 +476,125 @@ class MenuSelectionGUI:
     def edit_order(self):
         self.parent.deiconify()
         self.summary_window.withdraw()
+
+    def get_delivery_address(self, first_name, last_name, phone_number, cart_items):
+        self.address_window = tk.Toplevel(self.parent)
+        self.address_window.title("Delivery Address")
+        self.address_window.geometry("200x150")
+
+        address_label = ttk.Label(self.address_window, text="Enter Delivery Address:")
+        address_label.pack(pady=10)
+
+        self.delivery_address_entry = ttk.Entry(self.address_window)
+        self.delivery_address_entry.pack()
+
+        submit_button = ttk.Button(
+            self.address_window,
+            text="Submit",
+            command=lambda: self.place_delivery_order(first_name, last_name, phone_number, cart_items,
+                                                      self.delivery_address_entry.get()),
+            style="GridButton.TButton",
+        )
+        submit_button.pack(pady=10)
+
+        def validate_input():
+            address = self.delivery_address_entry.get()
+
+            if not address:
+                messagebox.showerror("Error", "Please enter a delivery address.")
+            else:
+                # Perform additional validation if needed
+                # For example, you can check if the address format is valid using regular expressions
+                if not re.match(r'^[a-zA-Z0-9\s]+$', address):
+                    messagebox.showerror("Error", "Invalid address format. Only alphanumeric characters and spaces are allowed.")
+                else:
+                    # Input is valid, proceed with delivery order placement
+                    self.place_delivery_order(first_name, last_name, phone_number, cart_items, address)
+                    self.address_window.destroy()
+
+        submit_button.config(command=validate_input)
+
+    def place_pickup_order(self, first_name, last_name, phone_number, cart_items):
+        total_amount = sum(item['quantity'] * item['item'].price for item in cart_items)
+
+        # Create the receipt
+        receipt = f"Order Details:\n"
+        receipt += f"First Name: {first_name} \n"
+        receipt += f"Last Name: {last_name} \n"
+        receipt += f"Phone No.: {phone_number} \n"
+        receipt += "\nItems:\n"
+        receipt += "-----G-----------------------------\n"
+        for item in cart_items:
+            name = item['item'].name
+            quantity = item['quantity']
+            price = item['item'].price
+            total_price = quantity * price
+            receipt += f"{name} x {quantity}  ${price}  Total: ${total_price}\n"
+        receipt += "----------------------------------\n"
+        receipt += f"Total Amount: ${total_amount:.2f}\n"
+        receipt += "----------------------------------\n"
+        receipt += "Your order will be ready for pickup \nin approximately 15 minutes."
+
+        # Calculate the desired height based on the number of items in the cart
+        num_items = len(cart_items)
+        height = 300 + (num_items * 15)
+
+        # Create the receipt window
+        self.receipt_window = tk.Toplevel(self.parent)
+        self.receipt_window.title("Order Receipt")
+        self.receipt_window.geometry(f"400x{height}")
+
+        receipt_label = ttk.Label(self.receipt_window, text=receipt, font=("Courier", 12))
+        receipt_label.pack(pady=10, padx=10)
+
+        # Hide all other windows except the order receipt
+        self.parent.withdraw()  # Hide the main window
+        self.summary_window.withdraw()  # Hide the order summary window
+        self.form_gui.window.withdraw()  # Hide the form window
+
+    def place_delivery_order(self, first_name, last_name, phone_number, cart_items, address):
+        # Validate the delivery address
+        if not address:
+            messagebox.showerror("Error", "Please enter a delivery address.")
+            return
+
+        # Add delivery fee
+        delivery_fee = 10
+        total_amount = sum(item['quantity'] * item['item'].price for item in cart_items) + delivery_fee
+
+        # Create the receipt
+        receipt = f"Order Details:\n"
+        receipt += f"First Name: {first_name} \n"
+        receipt += f"Last Name: {last_name} \n"
+        receipt += f"Phone No.: {phone_number} \n"
+        receipt += "\nItems:\n"
+        receipt += "----------------------------------\n"
+        for item in cart_items:
+            name = item['item'].name
+            quantity = item['quantity']
+            price = item['item'].price
+            total_price = quantity * price
+            receipt += f"{name} x {quantity}  ${price}  Total: ${total_price}\n"
+        receipt += "----------------------------------\n"
+        receipt += f"Delivery Fee: ${delivery_fee}\n"
+        receipt += f"Total Amount: ${total_amount:.2f}\n"
+        receipt += "----------------------------------\n"
+        receipt += f"Your order will be delivered to:\n {address}."
+
+        # Calculate the desired height based on the number of items in the cart
+        num_items = len(cart_items)
+        height = 300 + (num_items * 15)
+
+        # Create the receipt window
+        self.receipt_window = tk.Toplevel(self.parent)
+        self.receipt_window.title("Order Receipt")
+        self.receipt_window.geometry(f"400x{height}")
+
+        receipt_label = ttk.Label(self.receipt_window, text=receipt, font=("Courier", 12))
+        receipt_label.pack(pady=10, padx=10)
+
+        # Hide all other windows except the order receipt
+        self.parent.withdraw()  # Hide the main window
+        self.summary_window.withdraw()  # Hide the order summary window
+        self.address_window.withdraw()  # Hide the address window
+        self.form_gui.window.withdraw()  # Hide the form window
